@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Recipe Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #e5e5e5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #888888;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .main-card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid #2a2a2a;
+        }
+
+        .session-info {
+            background: #2a2a2a;
+            color: #e5e5e5;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .session-info.show {
+            display: flex;
+        }
+
+        .session-details {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .session-btn {
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            color: #e5e5e5;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .session-btn:hover {
+            background: #4a4a4a;
+            transform: translateY(-1px);
+        }
+
+        .input-section {
+            margin-bottom: 40px;
+        }
+
+        .input-section h4 {
+            color: #e5e5e5;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid #2a2a2a;
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            color: #e5e5e5;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #444444;
+            box-shadow: 0 0 0 3px rgba(68, 68, 68, 0.2);
+            background: #222222;
+        }
+
+        .input-group input[type="text"] {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #2a2a2a;
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            color: #e5e5e5;
+        }
+
+        .input-group input[type="text"]:focus {
+            outline: none;
+            border-color: #444444;
+            box-shadow: 0 0 0 3px rgba(68, 68, 68, 0.2);
+            background: #222222;
+        }
+
+        .input-group input[type="text"]::placeholder {
+            color: #666666;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #444444;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #1a1a1a;
+            color: #e5e5e5;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-upload-area:hover {
+            border-color: #666666;
+            background: #222222;
+            transform: translateY(-2px);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #7c3aed;
+            background: #2a1a3a;
+            transform: translateY(-2px);
+        }
+
+        .upload-status {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .upload-status.success {
+            background: #1a3d1a;
+            color: #90ee90;
+            border: 1px solid #2d5f2d;
+        }
+
+        .upload-status.error {
+            background: #3d1a1a;
+            color: #ff6b6b;
+            border: 1px solid #5f2d2d;
+        }
+
+        .upload-status.processing {
+            background: #3a3a1a;
+            color: #ffeb3b;
+            border: 1px solid #6d6d2d;
+        }
+
+        .item-row.highlighted {
+            background: #3d3d1a !important;
+            border-color: #8d8d2d !important;
+        }
+
+        .item-row.highlighted:hover {
+            background: #4d4d2a !important;
+            border-color: #9d9d3d !important;
+        }
+
+        .search-info {
+            background: #2a2a2a;
+            color: #e5e5e5;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn {
+            background: #333333;
+            color: #e5e5e5;
+            border: 1px solid #444444;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #444444;
+            transform: translateY(-2px);
+            border-color: #555555;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.success {
+            background: #1a5f1a;
+            border-color: #2d8f2d;
+            color: #ffffff;
+        }
+
+        .btn.success:hover {
+            background: #2d8f2d;
+            border-color: #4aa84a;
+        }
+
+        .btn.danger {
+            background: #5f1a1a;
+            border-color: #8f2d2d;
+            color: #ffffff;
+        }
+
+        .btn.danger:hover {
+            background: #8f2d2d;
+            border-color: #a84a4a;
+        }
+
+        .btn.secondary {
+            background: #2a2a2a;
+            color: #cccccc;
+            border-color: #3a3a3a;
+        }
+
+        .btn.secondary:hover {
+            background: #3a3a3a;
+            border-color: #4a4a4a;
+        }
+
+        .checklist-section {
+            margin: 40px 0;
+        }
+
+        .checklist-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .checklist-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checklist-column h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #e5e5e5;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .checklist-column.selected h3 {
+            background: #1a5f1a;
+            border: 1px solid #2d8f2d;
+        }
+
+        .checklist-column.unselected h3 {
+            background: #5f1a1a;
+            border: 1px solid #8f2d2d;
+        }
+
+        .checklist {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            background: #1a1a1a;
+            flex: 1;
+        }
+
+        .checklist::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .checklist::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+
+        .checklist::-webkit-scrollbar-thumb {
+            background: #444444;
+            border-radius: 4px;
+        }
+
+        .checklist::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 8px 0;
+            background: #2a2a2a;
+            border-radius: 12px;
+            border: 1px solid #3a3a3a;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .item-row.selected {
+            background: #1a3d1a;
+            border-color: #2d5f2d;
+        }
+
+        .item-row.selected:hover {
+            border-color: #4aa84a;
+            background: #2d5f2d;
+        }
+
+        .item-row.unselected {
+            background: #3d1a1a;
+            border-color: #5f2d2d;
+        }
+
+        .item-row.unselected:hover {
+            border-color: #a84a4a;
+            background: #5f2d2d;
+        }
+
+        .move-btn {
+            background: #333333;
+            color: white;
+            border: 1px solid #444444;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .move-btn:hover {
+            background: #444444;
+            border-color: #555555;
+            transform: scale(1.1);
+        }
+
+        .item-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: #666666;
+        }
+
+        .item-label {
+            flex: 1;
+            font-size: 16px;
+            color: #e5e5e5;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .delete-btn {
+            background: #5f1a1a;
+            color: white;
+            border: 1px solid #8f2d2d;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #8f2d2d;
+            border-color: #a84a4a;
+            transform: scale(1.1);
+        }
+
+        .preview-section {
+            margin: 40px 0;
+        }
+
+        .preview-section h3 {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #e5e5e5;
+            margin-bottom: 15px;
+        }
+
+        .preview-box {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 25px;
+            min-height: 100px;
+            max-height: 400px;
+            border: 2px solid #3a3a3a;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            grid-auto-flow: column;
+            grid-auto-columns: 180px;
+            gap: 8px;
+            min-height: 350px;
+            align-items: start;
+            width: max-content;
+            min-width: 100%;
+        }
+
+        .preview-item {
+            background: #3a3a3a;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            color: #e5e5e5;
+            border-left: 4px solid #666666;
+            white-space: nowrap;
+            text-align: left;
+            font-size: 14px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-counter {
+            background: #1a5f1a;
+            color: #90ee90;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2d8f2d;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .preview-counter.unselected {
+            background: #5f1a1a;
+            color: #ff6b6b;
+            border: 1px solid #8f2d2d;
+        }
+
+        .preview-box::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .preview-box::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .preview-box::-webkit-scrollbar-thumb {
+            background: #444444;
+            border-radius: 4px;
+        }
+
+        .preview-box::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .message, .error {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .message {
+            background: #1a3d1a;
+            color: #90ee90;
+            border: 1px solid #2d5f2d;
+        }
+
+        .error {
+            background: #3d1a1a;
+            color: #ff6b6b;
+            border: 1px solid #5f2d2d;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+
+            .main-card {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .session-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .checklist-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Recipe Generator</h1>
+            <p>Create custom Minecraft duplication recipes with ease</p>
+        </div>
+
+        <div class="main-card">
+            <div id="sessionInfo" class="session-info">
+                <div class="session-details">
+                    <strong>Last Session:</strong> <span id="sessionDetails"></span>
+                </div>
+                <form method="post" style="display: inline;">
+                    <input type="hidden" name="action" value="load_last">
+                    <button type="submit" class="session-btn">Reload</button>
+                </form>
+            </div>
+
+            <form method="post" onsubmit="return validateAndPrepareForm()">
+                <div class="input-section">
+                    <div class="input-group">
+                        <textarea 
+                            id="textarea" 
+                            name="variables" 
+                            placeholder="Add items to your recipe list (one per line)...&#10;&#10;Example:&#10;stone&#10;wood&#10;iron_ingot"
+                        ></textarea>
+                    </div>
+                    <button type="button" id="convertBtn" class="btn">Add to List</button>
+                </div>
+
+                <div class="input-section">
+                    <h4>📁 Upload Minecraft Catalogs <span style="font-size: 0.8em; font-weight: 300; color: #888; margin-left: 8px;">(usually called crafting_item_catalog.json)</span></h4>
+                    <div class="input-group">
+                        <input 
+                            type="file" 
+                            id="catalogFile" 
+                            accept=".json,.txt"
+                            multiple
+                            style="display: none;"
+                        />
+                        <div class="file-upload-area" onclick="document.getElementById('catalogFile').click()">
+                            <div class="file-upload-content">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                                <div style="font-weight: 500; margin-bottom: 5px;">Drop catalog files here or click to browse</div>
+                                <div style="font-size: 14px; color: #888;">Supports multiple .json and .txt files</div>
+                            </div>
+                        </div>
+                        <div id="uploadStatus" class="upload-status"></div>
+                        <div id="fileList" style="display: none; margin-top: 15px;">
+                            <h5 style="color: #e5e5e5; margin-bottom: 10px;">Selected Files:</h5>
+                            <div id="fileListContent" style="max-height: 150px; overflow-y: auto; background: #2a2a2a; border-radius: 10px; padding: 15px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                        <button type="button" id="uploadCatalogBtn" class="btn" style="background: #7c3aed; border-color: #6d28d9;">📁 Upload & Parse All</button>
+                        <button type="button" id="clearFilesBtn" class="btn secondary" style="display: none;">🗑️ Clear Files</button>
+                        <button type="button" id="addAllExtractedBtn" class="btn success" style="display: none;">✅ Add All Items</button>
+                        <button type="button" id="selectAllExtractedBtn" class="btn" style="display: none;">🎯 Select All Items</button>
+                    </div>
+                    <div id="extractedItemsPreview" style="display: none; margin-top: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h5 style="color: #e5e5e5; margin: 0;">Extracted Items Preview:</h5>
+                            <div id="extractionSummary" style="font-size: 14px; color: #888;"></div>
+                        </div>
+                        <div id="extractedItemsList" class="preview-box" style="max-height: 200px; font-size: 14px;">
+                        </div>
+                        <div id="fileProcessingSummary" style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 10px; font-size: 14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <textarea 
+                            id="deselectTextarea" 
+                            placeholder="Paste items to deselect (one per line)...&#10;&#10;Example:&#10;stone&#10;wood"
+                            style="min-height: 80px;"
+                        ></textarea>
+                    </div>
+                    <button type="button" id="deselectItemsBtn" class="btn secondary">Deselect Items</button>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <input 
+                            type="text"
+                            id="searchFilter" 
+                            placeholder="Search items (partial match)... e.g. 'iron' or 'stone'"
+                            style="min-height: 50px; padding: 15px 20px; font-size: 16px;"
+                        />
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" id="selectMatchingBtn" class="btn success">Select Matching</button>
+                        <button type="button" id="deselectMatchingBtn" class="btn danger">Deselect Matching</button>
+                        <button type="button" id="clearSearchBtn" class="btn secondary">Clear Search</button>
+                    </div>
+                </div>
+
+                <div class="checklist-section">
+                    <div id="searchInfo" class="search-info" style="display: none;">
+                        Search results: <span id="searchResults"></span>
+                    </div>
+                    <div class="checklist-container">
+                        <div class="checklist-column selected">
+                            <h3>✅ Selected Items</h3>
+                            <div id="selectedList" class="checklist">
+                                <div class="empty-state">Selected items will appear here</div>
+                            </div>
+                        </div>
+                        <div class="checklist-column unselected">
+                            <h3>⭕ Unselected Items</h3>
+                            <div id="unselectedList" class="checklist">
+                                <div class="empty-state">Unselected items will appear here</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div>
+                        <h3>✅ Selected Items Preview</h3>
+                        <div id="selectedPreview" class="preview-box">
+                            <div class="empty-state">Selected items will appear here</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 30px;">
+                        <h3>⭕ Unselected Items Preview</h3>
+                        <div id="unselectedPreview" class="preview-box">
+                            <div class="empty-state">Unselected items will appear here</div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="allItems" name="all_items">
+
+                <div class="button-group">
+                    <button type="submit" class="btn" id="generateBtn">Generate Recipes</button>
+                    <button type="button" id="selectAllBtn" class="btn secondary">Select All</button>
+                    <button type="button" id="deselectAllBtn" class="btn secondary">Deselect All</button>
+                    <button type="button" id="updateBtn" class="btn success">Save Session</button>
+                    <button type="button" id="clearAllBtn" class="btn danger">Clear All</button>
+                </div>
+            </form>
+
+            <div class="message" style="display: none;">{{ message|safe }}</div>
+            <div class="error" style="display: none;">{{ error }}</div>
+            
+            <!-- Download Options Section -->
+            <div style="text-align: center; margin-top: 30px; padding: 25px; background: #2a2a2a; border-radius: 15px; border: 1px solid #3a3a3a;">
+                <h3 style="color: #e5e5e5; margin-bottom: 20px;">📥 Download Options</h3>
+                
+                <!-- Three download buttons -->
+                <div style="margin-bottom: 20px;">
+                    <a href="/download" class="btn success" style="text-decoration: none; display: inline-block; margin: 5px 10px; padding: 15px 25px; font-size: 16px;">📄 Recipes Only</a>
+                    <button type="button" id="structuredDownloadBtn" class="btn" style="background: #2563eb; border: 2px solid #1d4ed8; color: white; display: inline-block; margin: 5px 10px; padding: 15px 25px; font-size: 16px;">📦 Behavior Pack</button>
+                    <button type="button" id="completePackDownloadBtn" class="btn" style="background: #7c3aed; border: 2px solid #6d28d9; color: white; display: inline-block; margin: 5px 10px; padding: 15px 25px; font-size: 16px;">🎁 Complete Pack</button>
+                </div>
+
+                <div style="font-size: 13px; color: #888; margin-bottom: 15px;">
+                    <div><strong>📄 Recipes Only:</strong> Simple ZIP with just the recipe JSON files</div>
+                    <div><strong>📦 Behavior Pack:</strong> Bedrock behavior pack with recipes and block definition</div>
+                    <div><strong>🎁 Complete Pack:</strong> Both Behavior Pack AND Resource Pack with textures, models, etc.</div>
+                </div>
+
+                <div style="padding: 15px; background: #1a1a1a; border-radius: 10px; color: #888; font-size: 14px;">
+                    <strong>Pack Structures:</strong><br>
+                    📦 BP: Duplicating Table BP/ with blocks/, recipes/, manifest.json, pack_icon.png<br>
+                    🎁 Complete: Both "Duplicating Table BP/" and "Duplicating Table RP/" with full assets
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentItems = [];
+        let itemStates = {};
+        let currentSearchTerm = '';
+        let extractedItems = [];
+
+        // File upload handling functions
+        function updateFileDisplay(files) {
+            const uploadArea = document.querySelector('.file-upload-area');
+            const content = uploadArea.querySelector('.file-upload-content');
+            const fileList = document.getElementById('fileList');
+            const fileListContent = document.getElementById('fileListContent');
+            const clearBtn = document.getElementById('clearFilesBtn');
+            
+            if (files.length === 1) {
+                content.innerHTML = `
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                    <div style="font-weight: 500; margin-bottom: 5px;">${files[0].name}</div>
+                    <div style="font-size: 14px; color: #888;">${formatFileSize(files[0].size)} • ${files[0].type || 'Unknown type'}</div>
+                `;
+                fileList.style.display = 'none';
+            } else if (files.length > 1) {
+                content.innerHTML = `
+                    <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                    <div style="font-weight: 500; margin-bottom: 5px;">${files.length} files selected</div>
+                    <div style="font-size: 14px; color: #888;">Total size: ${formatFileSize(Array.from(files).reduce((total, file) => total + file.size, 0))}</div>
+                `;
+                
+                // Show file list
+                fileListContent.innerHTML = '';
+                Array.from(files).forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #3a3a3a;';
+                    fileItem.innerHTML = `
+                        <div>
+                            <div style="font-weight: 500; color: #e5e5e5;">${file.name}</div>
+                            <div style="font-size: 12px; color: #888;">${formatFileSize(file.size)} • ${file.type || 'Unknown type'}</div>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">File ${index + 1}</div>
+                    `;
+                    fileListContent.appendChild(fileItem);
+                });
+                fileList.style.display = 'block';
+            }
+            
+            clearBtn.style.display = files.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showUploadStatus(message, type) {
+            const status = document.getElementById('uploadStatus');
+            status.className = `upload-status ${type}`;
+            status.textContent = message;
+            status.style.display = 'block';
+        }
+
+        function hideUploadStatus() {
+            document.getElementById('uploadStatus').style.display = 'none';
+        }
+
+        function uploadAndParseCatalog(files) {
+            const formData = new FormData();
+            
+            // Add all files to form data
+            Array.from(files).forEach(file => {
+                formData.append('catalog_file', file);
+            });
+            
+            const fileCount = files.length;
+            showUploadStatus(`Processing ${fileCount} file${fileCount > 1 ? 's' : ''}...`, 'processing');
+            
+            fetch('/upload-catalog', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    extractedItems = data.items;
+                    
+                    let message = `✅ ${data.message}`;
+                    if (data.warning) {
+                        message += `\n⚠️ ${data.warning}`;
+                    }
+                    
+                    showUploadStatus(message, 'success');
+                    showExtractedPreview(data);
+                    
+                    // Show action buttons
+                    document.getElementById('addAllExtractedBtn').style.display = 'inline-block';
+                    document.getElementById('selectAllExtractedBtn').style.display = 'inline-block';
+                    
+                } else {
+                    showUploadStatus(`❌ ${data.error}`, 'error');
+                    hideExtractedPreview();
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showUploadStatus('❌ Upload failed. Please try again.', 'error');
+                hideExtractedPreview();
+            });
+        }
+
+        function showExtractedPreview(data) {
+            const previewSection = document.getElementById('extractedItemsPreview');
+            const itemsList = document.getElementById('extractedItemsList');
+            const summary = document.getElementById('extractionSummary');
+            const processingSummary = document.getElementById('fileProcessingSummary');
+            
+            // Update summary
+            summary.textContent = `${data.count} unique items (from ${data.total_items || data.count} total)`;
+            
+            // Create preview grid
+            const container = document.createElement('div');
+            container.className = 'preview-container';
+            container.style.gridTemplateRows = 'repeat(10, 1fr)';
+            
+            // Add counter
+            const counter = document.createElement('div');
+            counter.className = 'preview-counter';
+            counter.textContent = `${data.items.length} Items`;
+            container.appendChild(counter);
+            
+            // Add items (show first 50 for performance)
+            const displayItems = data.items.slice(0, 50);
+            displayItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.textContent = item;
+                div.title = item;
+                container.appendChild(div);
+            });
+            
+            if (data.items.length > 50) {
+                const moreDiv = document.createElement('div');
+                moreDiv.className = 'preview-item';
+                moreDiv.textContent = `... and ${data.items.length - 50} more`;
+                moreDiv.style.fontStyle = 'italic';
+                moreDiv.style.color = '#888';
+                container.appendChild(moreDiv);
+            }
+            
+            itemsList.innerHTML = '';
+            itemsList.appendChild(container);
+            
+            // Show file processing summary
+            let summaryHTML = '';
+            
+            if (data.processed_files && data.processed_files.length > 0) {
+                summaryHTML += '<div style="color: #90ee90; margin-bottom: 10px;"><strong>✅ Successfully Processed:</strong></div>';
+                summaryHTML += '<ul style="margin: 0; padding-left: 20px; color: #e5e5e5;">';
+                data.processed_files.forEach(file => {
+                    summaryHTML += `<li style="margin-bottom: 5px;">${file}</li>`;
+                });
+                summaryHTML += '</ul>';
+            }
+            
+            if (data.failed_files && data.failed_files.length > 0) {
+                if (summaryHTML) summaryHTML += '<div style="margin: 15px 0;"></div>';
+                summaryHTML += '<div style="color: #ff6b6b; margin-bottom: 10px;"><strong>❌ Failed to Process:</strong></div>';
+                summaryHTML += '<ul style="margin: 0; padding-left: 20px; color: #e5e5e5;">';
+                data.failed_files.forEach(file => {
+                    summaryHTML += `<li style="margin-bottom: 5px;">${file}</li>`;
+                });
+                summaryHTML += '</ul>';
+            }
+            
+            processingSummary.innerHTML = summaryHTML;
+            previewSection.style.display = 'block';
+        }
+
+        function clearSelectedFiles() {
+            const fileInput = document.getElementById('catalogFile');
+            const uploadArea = document.querySelector('.file-upload-area');
+            const fileList = document.getElementById('fileList');
+            const clearBtn = document.getElementById('clearFilesBtn');
+            
+            fileInput.value = '';
+            fileList.style.display = 'none';
+            clearBtn.style.display = 'none';
+            hideUploadStatus();
+            hideExtractedPreview();
+            
+            // Reset upload area
+            uploadArea.querySelector('.file-upload-content').innerHTML = `
+                <div style="font-size: 2rem; margin-bottom: 10px;">📄</div>
+                <div style="font-weight: 500; margin-bottom: 5px;">Drop catalog files here or click to browse</div>
+                <div style="font-size: 14px; color: #888;">Supports multiple .json and .txt files</div>
+            `;
+        }
+
+        function hideExtractedPreview() {
+            document.getElementById('extractedItemsPreview').style.display = 'none';
+            document.getElementById('addAllExtractedBtn').style.display = 'none';
+            document.getElementById('selectAllExtractedBtn').style.display = 'none';
+            extractedItems = [];
+        }
+
+        // All the existing JavaScript functions
+        function updateItemLists() {
+            const selectedList = document.getElementById('selectedList');
+            const unselectedList = document.getElementById('unselectedList');
+            
+            selectedList.innerHTML = '';
+            unselectedList.innerHTML = '';
+
+            if (currentItems.length === 0) {
+                selectedList.innerHTML = '<div class="empty-state">Selected items will appear here</div>';
+                unselectedList.innerHTML = '<div class="empty-state">Unselected items will appear here</div>';
+                updatePreview();
+                return;
+            }
+
+            let selectedCount = 0;
+            let unselectedCount = 0;
+            let filteredItems = currentItems;
+
+            if (currentSearchTerm) {
+                filteredItems = currentItems.filter(item => 
+                    item.toLowerCase().includes(currentSearchTerm.toLowerCase())
+                );
+            }
+
+            filteredItems.forEach(item => {
+                const isSelected = itemStates.hasOwnProperty(item) ? itemStates[item] : true;
+                const itemRow = createItemRow(item, isSelected, true);
+                
+                if (isSelected) {
+                    selectedList.appendChild(itemRow);
+                    selectedCount++;
+                } else {
+                    unselectedList.appendChild(itemRow);
+                    unselectedCount++;
+                }
+            });
+
+            if (selectedCount === 0) {
+                if (currentSearchTerm) {
+                    selectedList.innerHTML = '<div class="empty-state">No selected items match your search</div>';
+                } else {
+                    selectedList.innerHTML = '<div class="empty-state">Selected items will appear here</div>';
+                }
+            }
+            if (unselectedCount === 0) {
+                if (currentSearchTerm) {
+                    unselectedList.innerHTML = '<div class="empty-state">No unselected items match your search</div>';
+                } else {
+                    unselectedList.innerHTML = '<div class="empty-state">Unselected items will appear here</div>';
+                }
+            }
+
+            updatePreview();
+        }
+
+        function createItemRow(item, isChecked = true, showMoveButton = false) {
+            const itemRow = document.createElement('div');
+            const isHighlighted = currentSearchTerm && item.toLowerCase().includes(currentSearchTerm.toLowerCase());
+            
+            itemRow.className = `item-row ${isChecked ? 'selected' : 'unselected'}${isHighlighted ? ' highlighted' : ''}`;
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'selected';
+            checkbox.value = item;
+            checkbox.checked = isChecked;
+            checkbox.className = 'item-checkbox';
+            checkbox.onchange = () => {
+                itemStates[item] = checkbox.checked;
+                updateItemLists();
+            };
+            
+            const label = document.createElement('span');
+            label.textContent = item;
+            label.className = 'item-label';
+            
+            if (isHighlighted && currentSearchTerm) {
+                const regex = new RegExp(`(${currentSearchTerm})`, 'gi');
+                label.innerHTML = item.replace(regex, '<strong style="background: #8d8d2d; color: #000; padding: 2px 4px; border-radius: 3px;">$1</strong>');
+            }
+            
+            label.onclick = () => {
+                checkbox.checked = !checkbox.checked;
+                itemStates[item] = checkbox.checked;
+                updateItemLists();
+            };
+            
+            itemRow.appendChild(checkbox);
+            itemRow.appendChild(label);
+            
+            if (showMoveButton) {
+                const moveBtn = document.createElement('button');
+                moveBtn.textContent = isChecked ? '→' : '←';
+                moveBtn.className = 'move-btn';
+                moveBtn.type = 'button';
+                moveBtn.title = isChecked ? 'Move to unselected' : 'Move to selected';
+                moveBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    checkbox.checked = !checkbox.checked;
+                    itemStates[item] = checkbox.checked;
+                    updateItemLists();
+                };
+                itemRow.appendChild(moveBtn);
+            }
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '×';
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.type = 'button';
+            deleteBtn.title = `Remove ${item}`;
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeItem(item);
+            };
+            
+            itemRow.appendChild(deleteBtn);
+            return itemRow;
+        }
+
+        function updatePreview() {
+            updateSelectedPreview();
+            updateUnselectedPreview();
+        }
+
+        function updateSelectedPreview() {
+            const preview = document.getElementById('selectedPreview');
+            let selectedItems = [];
+            currentItems.forEach(item => {
+                if (itemStates[item] !== false) {
+                    selectedItems.push(item);
+                }
+            });
+            
+            if (selectedItems.length === 0) {
+                preview.innerHTML = '<div class="empty-state">Selected items will appear here</div>';
+                return;
+            }
+
+            const container = document.createElement('div');
+            container.className = 'preview-container';
+
+            const counter = document.createElement('div');
+            counter.className = 'preview-counter';
+            counter.textContent = `${selectedItems.length} Selected`;
+            container.appendChild(counter);
+
+            selectedItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.textContent = item;
+                div.title = item;
+                container.appendChild(div);
+            });
+
+            preview.innerHTML = '';
+            preview.appendChild(container);
+        }
+
+        function updateUnselectedPreview() {
+            const preview = document.getElementById('unselectedPreview');
+            let unselectedItems = [];
+            currentItems.forEach(item => {
+                if (itemStates[item] === false) {
+                    unselectedItems.push(item);
+                }
+            });
+            
+            if (unselectedItems.length === 0) {
+                preview.innerHTML = '<div class="empty-state">Unselected items will appear here</div>';
+                return;
+            }
+
+            const container = document.createElement('div');
+            container.className = 'preview-container';
+
+            const counter = document.createElement('div');
+            counter.className = 'preview-counter unselected';
+            counter.textContent = `${unselectedItems.length} Unselected`;
+            container.appendChild(counter);
+
+            unselectedItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.textContent = item;
+                div.title = item;
+                container.appendChild(div);
+            });
+
+            preview.innerHTML = '';
+            preview.appendChild(container);
+        }
+
+        function removeItem(itemToRemove) {
+            if (confirm(`Remove "${itemToRemove}" from your list?`)) {
+                currentItems = currentItems.filter(item => item !== itemToRemove);
+                delete itemStates[itemToRemove];
+                updateItemLists();
+            }
+        }
+
+        function clearAllItems() {
+            if (confirm('Clear all items from your list?')) {
+                currentItems = [];
+                itemStates = {};
+                updateItemLists();
+                document.getElementById('textarea').value = '';
+            }
+        }
+
+        function selectAll() {
+            currentItems.forEach(item => {
+                itemStates[item] = true;
+            });
+            updateItemLists();
+        }
+
+        function deselectAll() {
+            currentItems.forEach(item => {
+                itemStates[item] = false;
+            });
+            updateItemLists();
+        }
+
+        function searchAndHighlight() {
+            const searchTerm = document.getElementById('searchFilter').value.trim().toLowerCase();
+            currentSearchTerm = searchTerm;
+            
+            if (!searchTerm) {
+                clearSearch();
+                return;
+            }
+
+            let matchingItems = [];
+            currentItems.forEach(item => {
+                if (item.toLowerCase().includes(searchTerm)) {
+                    matchingItems.push(item);
+                }
+            });
+
+            const searchInfo = document.getElementById('searchInfo');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (matchingItems.length > 0) {
+                searchResults.textContent = `Showing ${matchingItems.length} of ${currentItems.length} items matching "${searchTerm}"`;
+                searchInfo.style.display = 'block';
+            } else {
+                searchResults.textContent = `No items match "${searchTerm}" - showing 0 of ${currentItems.length} items`;
+                searchInfo.style.display = 'block';
+            }
+
+            updateItemLists();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchFilter').value = '';
+            currentSearchTerm = '';
+            document.getElementById('searchInfo').style.display = 'none';
+            updateItemLists();
+        }
+
+        function selectMatching() {
+            const searchTerm = document.getElementById('searchFilter').value.trim().toLowerCase();
+            if (!searchTerm) {
+                alert('Please enter a search term first.');
+                return;
+            }
+
+            let selectedCount = 0;
+            currentItems.forEach(item => {
+                if (item.toLowerCase().includes(searchTerm)) {
+                    itemStates[item] = true;
+                    selectedCount++;
+                }
+            });
+
+            updateItemLists();
+            alert(`Selected ${selectedCount} items matching "${searchTerm}"`);
+        }
+
+        function deselectMatching() {
+            const searchTerm = document.getElementById('searchFilter').value.trim().toLowerCase();
+            if (!searchTerm) {
+                alert('Please enter a search term first.');
+                return;
+            }
+
+            let deselectedCount = 0;
+            currentItems.forEach(item => {
+                if (item.toLowerCase().includes(searchTerm)) {
+                    itemStates[item] = false;
+                    deselectedCount++;
+                }
+            });
+
+            updateItemLists();
+            alert(`Deselected ${deselectedCount} items matching "${searchTerm}"`);
+        }
+
+        function deselectSpecificItems() {
+            const input = document.getElementById('deselectTextarea').value.trim();
+            if (!input) {
+                alert('Please enter some items to deselect.');
+                return;
+            }
+
+            const itemsToDeselect = input.split('\n').map(l => l.trim()).filter(Boolean);
+            let deselectedCount = 0;
+            let foundItems = [];
+            let notFoundItems = [];
+
+            itemsToDeselect.forEach(itemName => {
+                if (currentItems.includes(itemName)) {
+                    itemStates[itemName] = false;
+                    deselectedCount++;
+                    foundItems.push(itemName);
+                } else {
+                    notFoundItems.push(itemName);
+                }
+            });
+
+            document.getElementById('deselectTextarea').value = '';
+
+            let message = '';
+            if (foundItems.length > 0) {
+                message += `Deselected: ${foundItems.join(', ')}\n`;
+            }
+            if (notFoundItems.length > 0) {
+                message += `Not found: ${notFoundItems.join(', ')}\n`;
+            }
+            message += `Total deselected: ${deselectedCount} item(s)`;
+            
+            alert(message);
+            updateItemLists();
+        }
+
+        function validateAndPrepareForm() {
+            const selected = document.querySelectorAll('input[type="checkbox"]:checked');
+            if (selected.length === 0) {
+                alert('Please add items to your list and select at least one item to generate recipes.');
+                return false;
+            }
+            
+            saveCurrentStatesToSession();
+            document.getElementById('allItems').value = currentItems.join('\n');
+            return true;
+        }
+
+        function saveCurrentStatesToSession() {
+            const selectedItems = [];
+            currentItems.forEach(item => {
+                if (itemStates[item] !== false) {
+                    selectedItems.push(item);
+                }
+            });
+
+            const sessionData = {
+                items: currentItems,
+                selected: selectedItems
+            };
+
+            fetch('/api/update-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(sessionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Session saved before form submission:', data);
+            })
+            .catch(error => {
+                console.error('Error saving session before form submission:', error);
+            });
+        }
+
+        function updateSession() {
+            const selectedItems = [];
+            currentItems.forEach(item => {
+                if (itemStates[item] !== false) {
+                    selectedItems.push(item);
+                }
+            });
+
+            const sessionData = {
+                items: currentItems,
+                selected: selectedItems
+            };
+
+            fetch('/api/update-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(sessionData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Session saved successfully!');
+                    const sessionDetails = document.getElementById('sessionDetails');
+                    sessionDetails.textContent = `${currentItems.length} items, ${selectedItems.length} selected (just now)`;
+                } else {
+                    alert('Failed to save session.');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating session:', error);
+                alert('Error saving session.');
+            });
+        }
+
+        function loadLastSession() {
+            fetch('/api/last-session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.items && data.items.length > 0) {
+                        const sessionInfo = document.getElementById('sessionInfo');
+                        const sessionDetails = document.getElementById('sessionDetails');
+                        
+                        const timestamp = data.timestamp ? 
+                            new Date(data.timestamp).toLocaleString() : 'Unknown';
+                        
+                        sessionDetails.textContent = `${data.items.length} items, ${data.selected.length} selected (${timestamp})`;
+                        sessionInfo.classList.add('show');
+                        
+                        autoLoadLastSession(data);
+                    }
+                })
+                .catch(error => {
+                    console.log('No previous session found:', error);
+                });
+        }
+
+        function autoLoadLastSession(data) {
+            console.log('Loading session data:', data);
+            const lines = [...new Set(data.items.map(l => l.trim()).filter(Boolean))];
+            currentItems = lines;
+            
+            itemStates = {};
+            lines.forEach(item => {
+                itemStates[item] = data.selected.includes(item);
+            });
+            
+            console.log('Loaded item states:', itemStates);
+            updateItemLists();
+        }
+
+        function handleStructuredDownload() {
+            console.log('=== BEHAVIOR PACK DOWNLOAD DEBUG ===');
+            const selectedItems = [];
+            
+            currentItems.forEach(item => {
+                if (itemStates[item] !== false) {
+                    selectedItems.push(item);
+                }
+            });
+
+            console.log('Selected items for download:', selectedItems);
+
+            if (selectedItems.length === 0) {
+                console.error('No items selected for download');
+                alert('Please select some items first before downloading.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('format', 'behavior_pack');
+            formData.append('items', JSON.stringify(selectedItems));
+
+            fetch('/download-custom', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Response received:', response.status, response.statusText);
+                if (response.ok) {
+                    return response.blob();
+                }
+                return response.text().then(text => {
+                    throw new Error(`Download failed: ${response.status} - ${text}`);
+                });
+            })
+            .then(blob => {
+                console.log('Blob received, size:', blob.size);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'Duplicating_Table_BP.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                console.log('=== DOWNLOAD SUCCESS ===');
+            })
+            .catch(error => {
+                console.error('=== DOWNLOAD ERROR ===');
+                console.error('Error details:', error);
+                alert('Download failed: ' + error.message);
+            });
+        }
+
+        function handleCompletePackDownload() {
+            console.log('=== COMPLETE PACK DOWNLOAD DEBUG ===');
+            const selectedItems = [];
+            
+            currentItems.forEach(item => {
+                if (itemStates[item] !== false) {
+                    selectedItems.push(item);
+                }
+            });
+
+            console.log('Selected items for complete pack download:', selectedItems);
+
+            if (selectedItems.length === 0) {
+                console.error('No items selected for complete pack download');
+                alert('Please select some items first before downloading.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('format', 'complete_pack');
+            formData.append('items', JSON.stringify(selectedItems));
+
+            fetch('/download-custom', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Complete pack response received:', response.status, response.statusText);
+                if (response.ok) {
+                    return response.blob();
+                }
+                return response.text().then(text => {
+                    throw new Error(`Complete pack download failed: ${response.status} - ${text}`);
+                });
+            })
+            .then(blob => {
+                console.log('Complete pack blob received, size:', blob.size);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'Duplicating_Table_Complete_Pack.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                console.log('=== COMPLETE PACK DOWNLOAD SUCCESS ===');
+            })
+            .catch(error => {
+                console.error('=== COMPLETE PACK DOWNLOAD ERROR ===');
+                console.error('Error details:', error);
+                alert('Complete pack download failed: ' + error.message);
+            });
+        }
+
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Page loaded, initializing...');
+            
+            // Load last session
+            loadLastSession();
+            
+            // File upload event listeners
+            const fileInput = document.getElementById('catalogFile');
+            const uploadArea = document.querySelector('.file-upload-area');
+            const uploadBtn = document.getElementById('uploadCatalogBtn');
+            const addAllBtn = document.getElementById('addAllExtractedBtn');
+            const selectAllBtn = document.getElementById('selectAllExtractedBtn');
+            
+            // Drag and drop handlers
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // Create a new FileList-like object
+                    const dt = new DataTransfer();
+                    Array.from(files).forEach(file => {
+                        if (file.name.toLowerCase().endsWith('.json') || file.name.toLowerCase().endsWith('.txt')) {
+                            dt.items.add(file);
+                        }
+                    });
+                    fileInput.files = dt.files;
+                    updateFileDisplay(dt.files);
+                }
+            });
+            
+            // File input change handler
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    updateFileDisplay(this.files);
+                }
+            });
+            
+            // Upload button handler
+            uploadBtn.addEventListener('click', function() {
+                if (fileInput.files.length === 0) {
+                    alert('Please select one or more files first.');
+                    return;
+                }
+                
+                uploadAndParseCatalog(fileInput.files);
+            });
+            
+            // Clear files button handler
+            document.getElementById('clearFilesBtn').addEventListener('click', clearSelectedFiles);
+            
+            // Add all extracted items
+            addAllBtn.addEventListener('click', function() {
+                if (extractedItems.length === 0) return;
+                
+                // Add to current items list
+                const existingItems = new Set(currentItems);
+                const newItems = extractedItems.filter(item => !existingItems.has(item));
+                
+                if (newItems.length === 0) {
+                    alert('All extracted items are already in your list.');
+                    return;
+                }
+                
+                currentItems = [...currentItems, ...newItems];
+                
+                // Initialize new items as selected
+                newItems.forEach(item => {
+                    itemStates[item] = true;
+                });
+                
+                updateItemLists();
+                
+                alert(`Added ${newItems.length} new items to your list!`);
+                hideExtractedPreview();
+            });
+            
+            // Select all extracted items (if they're already in the list)
+            selectAllBtn.addEventListener('click', function() {
+                if (extractedItems.length === 0) return;
+                
+                let selectedCount = 0;
+                extractedItems.forEach(item => {
+                    if (currentItems.includes(item)) {
+                        itemStates[item] = true;
+                        selectedCount++;
+                    }
+                });
+                
+                updateItemLists();
+                alert(`Selected ${selectedCount} items from the extracted list!`);
+            });
+            
+            // Add to List button
+            document.getElementById('convertBtn').addEventListener('click', function () {
+                console.log('Add to List button clicked');
+                const input = document.getElementById('textarea').value.trim();
+                if (!input) {
+                    alert('Please add some items first.');
+                    return;
+                }
+
+                const newLines = [...new Set(input.split('\n').map(l => l.trim()).filter(Boolean))];
+                const existingItems = new Set(currentItems);
+                const itemsToAdd = newLines.filter(item => !existingItems.has(item));
+                
+                if (itemsToAdd.length === 0) {
+                    alert('All items are already in your list.');
+                    return;
+                }
+
+                currentItems = [...currentItems, ...itemsToAdd];
+                
+                // Initialize new items as selected
+                itemsToAdd.forEach(item => {
+                    itemStates[item] = true;
+                });
+                
+                updateItemLists();
+                document.getElementById('textarea').value = '';
+                
+                alert(itemsToAdd.length === 1 ? 
+                    `Added "${itemsToAdd[0]}" to your list.` : 
+                    `Added ${itemsToAdd.length} new items to your list.`);
+            });
+
+            // All other button event listeners
+            document.getElementById('selectAllBtn').addEventListener('click', selectAll);
+            document.getElementById('deselectAllBtn').addEventListener('click', deselectAll);
+            document.getElementById('deselectItemsBtn').addEventListener('click', deselectSpecificItems);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllItems);
+            document.getElementById('updateBtn').addEventListener('click', updateSession);
+
+            // Search functionality
+            document.getElementById('searchFilter').addEventListener('input', searchAndHighlight);
+            document.getElementById('selectMatchingBtn').addEventListener('click', selectMatching);
+            document.getElementById('deselectMatchingBtn').addEventListener('click', deselectMatching);
+            document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+
+            // Download functionality
+            const structuredDownloadElement = document.getElementById('structuredDownloadBtn');
+            const completePackDownloadElement = document.getElementById('completePackDownloadBtn');
+            
+            if (structuredDownloadElement) {
+                structuredDownloadElement.addEventListener('click', handleStructuredDownload);
+                console.log('Behavior pack download listener added');
+            }
+            
+            if (completePackDownloadElement) {
+                completePackDownloadElement.addEventListener('click', handleCompletePackDownload);
+                console.log('Complete pack download listener added');
+            }
+            
+            console.log('All event listeners added successfully');
+        });
+    </script>
+</body>
+</html>
