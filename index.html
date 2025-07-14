@@ -1440,6 +1440,22 @@
                 return;
             }
 
+            // Show warning for large batches
+            if (selectedItems.length > 1000) {
+                if (!confirm(`You've selected ${selectedItems.length} items. This will create a large pack and may take a while to generate. Continue?`)) {
+                    return;
+                }
+            }
+
+            // Show loading indicator for large batches
+            const downloadBtn = document.getElementById('structuredDownloadBtn');
+            const originalText = downloadBtn.textContent;
+            
+            if (selectedItems.length > 500) {
+                downloadBtn.textContent = `🔄 Generating ${selectedItems.length} recipes...`;
+                downloadBtn.disabled = true;
+            }
+
             const formData = new FormData();
             formData.append('format', 'behavior_pack');
             formData.append('items', JSON.stringify(selectedItems));
@@ -1474,6 +1490,11 @@
                 console.error('=== DOWNLOAD ERROR ===');
                 console.error('Error details:', error);
                 alert('Download failed: ' + error.message);
+            })
+            .finally(() => {
+                // Reset button
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
             });
         }
 
@@ -1493,6 +1514,22 @@
                 console.error('No items selected for complete pack download');
                 alert('Please select some items first before downloading.');
                 return;
+            }
+
+            // Show warning for large batches
+            if (selectedItems.length > 1000) {
+                if (!confirm(`You've selected ${selectedItems.length} items. This will create a large pack and may take a while to generate. Continue?`)) {
+                    return;
+                }
+            }
+
+            // Show loading indicator for large batches
+            const downloadBtn = document.getElementById('completePackDownloadBtn');
+            const originalText = downloadBtn.textContent;
+            
+            if (selectedItems.length > 500) {
+                downloadBtn.textContent = `🔄 Generating ${selectedItems.length} recipes...`;
+                downloadBtn.disabled = true;
             }
 
             const formData = new FormData();
@@ -1529,6 +1566,11 @@
                 console.error('=== COMPLETE PACK DOWNLOAD ERROR ===');
                 console.error('Error details:', error);
                 alert('Complete pack download failed: ' + error.message);
+            })
+            .finally(() => {
+                // Reset button
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
             });
         }
 

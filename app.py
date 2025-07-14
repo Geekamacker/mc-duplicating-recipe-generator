@@ -557,11 +557,15 @@ def download_custom():
         
         logger.info(f"Custom download requested: format={format_type}, items={len(selected_items)}")
         
+        # Add progress logging for large batches
+        if len(selected_items) > 500:
+            logger.info(f"Processing large batch of {len(selected_items)} items - this may take a moment...")
+        
         if not selected_items:
             return "No items selected", 400
             
-        if len(selected_items) > 1000:  # Reasonable limit
-            return "Too many items selected", 400
+        if len(selected_items) > 5000:  # Increased from 1000 to 5000
+            return "Too many items selected. Please select fewer than 5000 items for performance reasons.", 400
             
         # Ensure directories exist
         os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -586,7 +590,10 @@ def download_custom():
         try:
             with zipfile.ZipFile(custom_zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 # Generate recipe files
-                for item in selected_items:
+                successful_recipes = 0
+                failed_recipes = 0
+                
+                for i, item in enumerate(selected_items):
                     try:
                         safe_name = safe_filename(item)
                         rendered = template.render(result_item=item)
@@ -606,11 +613,18 @@ def download_custom():
                             arcname = filename
                         
                         zipf.writestr(arcname, rendered)
-                        logger.debug(f"Added to custom ZIP: {arcname}")
+                        successful_recipes += 1
+                        
+                        # Log progress for large batches
+                        if len(selected_items) > 500 and (i + 1) % 100 == 0:
+                            logger.info(f"Progress: {i + 1}/{len(selected_items)} recipes generated")
                         
                     except Exception as e:
                         logger.error(f"Error processing item {item}: {e}")
+                        failed_recipes += 1
                         continue
+                
+                logger.info(f"Recipe generation complete: {successful_recipes} successful, {failed_recipes} failed")
                         
                 # Add metadata files based on format
                 try:
