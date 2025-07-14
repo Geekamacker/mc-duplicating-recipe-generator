@@ -884,8 +884,15 @@
             const summary = document.getElementById('extractionSummary');
             const processingSummary = document.getElementById('fileProcessingSummary');
             
-            // Update summary
-            summary.textContent = `${data.count} unique items (from ${data.total_items || data.count} total)`;
+            // Update summary with filtering info
+            let summaryText = `${data.count} stackable items`;
+            if (data.filtered_items && data.filtered_items > 0) {
+                summaryText += ` (${data.filtered_items} non-stackable filtered out)`;
+            }
+            if (data.total_items && data.total_items !== data.count) {
+                summaryText += ` from ${data.total_items} total`;
+            }
+            summary.textContent = summaryText;
             
             // Create preview grid
             const container = document.createElement('div');
@@ -895,7 +902,7 @@
             // Add counter
             const counter = document.createElement('div');
             counter.className = 'preview-counter';
-            counter.textContent = `${data.items.length} Items`;
+            counter.textContent = `${data.items.length} Stackable Items`;
             container.appendChild(counter);
             
             // Add items (show first 50 for performance)
@@ -920,7 +927,7 @@
             itemsList.innerHTML = '';
             itemsList.appendChild(container);
             
-            // Show file processing summary
+            // Show file processing summary - FIXED SECTION
             let summaryHTML = '';
             
             if (data.processed_files && data.processed_files.length > 0) {
@@ -940,6 +947,15 @@
                     summaryHTML += `<li style="margin-bottom: 5px;">${file}</li>`;
                 });
                 summaryHTML += '</ul>';
+            }
+            
+            if (data.filtered_items && data.filtered_items > 0) {
+                if (summaryHTML) summaryHTML += '<div style="margin: 15px 0;"></div>';
+                summaryHTML += '<div style="color: #ffeb3b; margin-bottom: 10px;"><strong>⚠️ Filtered Items:</strong></div>';
+                summaryHTML += `<div style="padding: 10px; background: #3a3a1a; border-radius: 8px; color: #e5e5e5;">`;
+                summaryHTML += `${data.filtered_items} non-stackable items were automatically filtered out (tools, armor, vehicles, etc.) `;
+                summaryHTML += `because they cannot be duplicated in Minecraft.`;
+                summaryHTML += `</div>`;
             }
             
             processingSummary.innerHTML = summaryHTML;

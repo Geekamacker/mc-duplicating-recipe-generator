@@ -249,6 +249,106 @@ def parse_text_catalog(content):
     
     return items
 
+def filter_stackable_items(items, show_stats=False):
+    """Filter out non-stackable items that cannot be duplicated"""
+    if not items:
+        return [], []
+    
+    # Define non-stackable item patterns (tools, armor, vehicles, etc.)
+    non_stackable_patterns = [
+        # Tools and weapons
+        'sword', 'pickaxe', 'axe', 'shovel', 'hoe', 'shears', 'flint_and_steel',
+        'fishing_rod', 'bow', 'crossbow', 'trident', 'shield', 'elytra',
+        'spyglass', 'brush', 'mace', 'carrot_on_a_stick', 'warped_fungus_on_a_stick',
+        
+        # Armor and equipment (including wolf armor)
+        'helmet', 'chestplate', 'leggings', 'boots', 'horse_armor', 'harness', 'wolf_armor',
+        
+        # Vehicles/Transportation
+        'boat', 'raft', 'minecart', 'saddle',
+        
+        # Music/Records/Instruments
+        'music_disc', 'record', 'goat_horn',
+        
+        # Potions and consumables with special properties
+        'potion', 'splash_potion', 'lingering_potion', 'tipped_arrow',
+        'medicine', 'suspicious_stew', 'mushroom_stew', 'rabbit_stew', 'beetroot_soup',
+        
+        # Books and written items
+        'enchanted_book', 'written_book', 'writable_book',
+        
+        # Containers with NBT or special behavior
+        'bundle', 'shulker_box', 'portfolio',
+        
+        # Special items and tools
+        'totem', 'compass', 'clock', 'map', 'filled_map',
+        'sparkler', 'glow_stick',
+        
+        # Spawn eggs
+        'spawn_egg',
+        
+        # Banners and decorative items with NBT
+        'banner'
+    ]
+    
+    # Additional specific non-stackable items
+    non_stackable_items = {
+        # Containers and liquids
+        'bucket', 'water_bucket', 'lava_bucket', 'milk_bucket', 'powder_snow_bucket',
+        'cod_bucket', 'salmon_bucket', 'pufferfish_bucket', 'tropical_fish_bucket',
+        'axolotl_bucket', 'tadpole_bucket',
+        
+        # Food with special stacking rules
+        'cake', 'pumpkin_pie',
+        
+        # Beds (have special placement rules)
+        'bed', 'white_bed', 'orange_bed', 'magenta_bed', 'light_blue_bed', 'yellow_bed',
+        'lime_bed', 'pink_bed', 'gray_bed', 'light_gray_bed', 'cyan_bed', 'purple_bed',
+        'blue_bed', 'brown_bed', 'green_bed', 'red_bed', 'black_bed'
+    }
+    
+    stackable_items = []
+    filtered_items = []
+    
+    for item in items:
+        if not item or not isinstance(item, str):
+            continue
+            
+        item_lower = item.lower()
+        
+        # Check if item matches any non-stackable patterns
+        is_stackable = True
+        
+        # Check patterns
+        for pattern in non_stackable_patterns:
+            if pattern in item_lower:
+                is_stackable = False
+                break
+        
+        # Check specific items
+        if item_lower in non_stackable_items:
+            is_stackable = False
+        
+        # Special rules for enchanted items (typically non-stackable)
+        if 'enchanted_' in item_lower and item_lower != 'enchanted_golden_apple':
+            is_stackable = False
+        
+        # Additional checks for items that commonly cause issues
+        if any(word in item_lower for word in ['_on_a_stick', '_chest_', 'chest_', '_armor', '_horn']):
+            is_stackable = False
+        
+        if is_stackable:
+            stackable_items.append(item)
+        else:
+            filtered_items.append(item)
+    
+    if show_stats:
+        logger.info(f"Filtered items: {len(stackable_items)} stackable, {len(filtered_items)} non-stackable")
+        if filtered_items and len(filtered_items) <= 20:  # Log first 20 filtered items for debugging
+            logger.info(f"Filtered out: {', '.join(filtered_items[:20])}")
+    
+    return stackable_items, filtered_items
+
 @app.route("/upload-catalog", methods=["POST"])
 def upload_catalog():
     """Handle multiple catalog file uploads and extract item names"""
@@ -300,19 +400,27 @@ def upload_catalog():
         # Remove duplicates and sort
         unique_items = sorted(list(set(all_extracted_items)))
         
+        # Filter out non-stackable items
+        stackable_items, filtered_items = filter_stackable_items(unique_items, show_stats=True)
+        
         # Build success message
         message_parts = []
         if processed_files:
             message_parts.append(f"Successfully processed {len(processed_files)} file(s)")
-            message_parts.append(f"Extracted {len(unique_items)} unique items (from {len(all_extracted_items)} total)")
+            message_parts.append(f"Found {len(unique_items)} unique items")
+            if filtered_items:
+                message_parts.append(f"Filtered out {len(filtered_items)} non-stackable items")
+            message_parts.append(f"Ready to use: {len(stackable_items)} stackable items")
         
         message = ". ".join(message_parts)
         
         response_data = {
             "success": True, 
-            "items": unique_items,
-            "count": len(unique_items),
+            "items": stackable_items,
+            "count": len(stackable_items),
             "total_items": len(all_extracted_items),
+            "unique_items": len(unique_items),
+            "filtered_items": len(filtered_items),
             "processed_files": processed_files,
             "failed_files": failed_files,
             "message": message
@@ -320,6 +428,9 @@ def upload_catalog():
         
         if failed_files:
             response_data["warning"] = f"Some files could not be processed: {', '.join(failed_files)}"
+        
+        if filtered_items:
+            response_data["filter_info"] = f"Filtered out {len(filtered_items)} non-stackable items (tools, armor, vehicles, etc.)"
         
         return jsonify(response_data)
         
@@ -380,7 +491,17 @@ def index():
             submitted_items = validate_item_names(submitted_items)
             all_items = validate_item_names(all_items_raw.split("\n") if all_items_raw else [])
             
-            logger.info(f"Form submission: {len(submitted_items)} selected items, {len(all_items)} total items")
+            # Filter out non-stackable items from submitted items
+            stackable_submitted, filtered_submitted = filter_stackable_items(submitted_items, show_stats=True)
+            
+            if not stackable_submitted:
+                if filtered_submitted:
+                    error = f"All {len(filtered_submitted)} selected items are non-stackable (tools, armor, vehicles, etc.) and cannot be duplicated. Please select stackable items instead."
+                else:
+                    error = "No stackable items selected. Please select items that can be duplicated."
+                return render_template_string(HTML_TEMPLATE, message=message, error=error)
+            
+            logger.info(f"Form submission: {len(stackable_submitted)} stackable items selected ({len(filtered_submitted)} non-stackable filtered out), {len(all_items)} total items")
             
             # Clean up old files
             cleanup_old_files()
@@ -410,7 +531,7 @@ def index():
                     with open(MASTER_LIST_PATH, 'r', encoding='utf-8') as f:
                         master_items = set(line.strip().lower() for line in f if line.strip())
 
-                new_items = [item for item in submitted_items if item.lower() not in master_items]
+                new_items = [item for item in stackable_submitted if item.lower() not in master_items]
                 if new_items:
                     with open(MASTER_LIST_PATH, "a", encoding='utf-8') as f:
                         for item in new_items:
@@ -420,7 +541,7 @@ def index():
 
             # Generate recipe files
             generated_files = []
-            for item in submitted_items:
+            for item in stackable_submitted:
                 try:
                     safe_name = safe_filename(item)
                     rendered = template.render(result_item=item)
@@ -513,12 +634,13 @@ def index():
 
             # Save current session
             try:
-                save_session(all_items, submitted_items)
+                save_session(all_items, stackable_submitted)
             except Exception as e:
                 logger.warning(f"Could not save session: {e}")
 
             zip_size = os.path.getsize(ZIP_PATH)
-            message = f"✅ Successfully generated {len(submitted_items)} recipe file(s) ({zip_size:,} bytes). <a href='/download' style='color: #90ee90; text-decoration: underline;'>Download ZIP</a>"
+            filter_message = f" ({len(filtered_submitted)} non-stackable items filtered out)" if filtered_submitted else ""
+            message = f"✅ Successfully generated {len(stackable_submitted)} recipe file(s) ({zip_size:,} bytes){filter_message}. <a href='/download' style='color: #90ee90; text-decoration: underline;'>Download ZIP</a>"
             logger.info(f"ZIP created successfully: {zip_size} bytes")
 
         except ValueError as e:
@@ -551,11 +673,16 @@ def download_custom():
         try:
             selected_items = json.loads(items_json)
             selected_items = validate_item_names(selected_items)
+            
+            # Filter out non-stackable items
+            stackable_items, filtered_items = filter_stackable_items(selected_items, show_stats=True)
+            selected_items = stackable_items  # Use only stackable items
+            
         except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Invalid items JSON: {e}")
             return "Invalid items data", 400
         
-        logger.info(f"Custom download requested: format={format_type}, items={len(selected_items)}")
+        logger.info(f"Custom download requested: format={format_type}, items={len(selected_items)} stackable ({len(filtered_items) if 'filtered_items' in locals() else 0} filtered out)")
         
         # Add progress logging for large batches
         if len(selected_items) > 500:
