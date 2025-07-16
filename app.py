@@ -752,6 +752,51 @@ def download_custom():
                         continue
                 
                 logger.info(f"Recipe generation complete: {successful_recipes} successful, {failed_recipes} failed")
+                
+                # ALWAYS add the duplicating table crafting recipe for behavior packs and complete packs
+                if format_type in ['behavior_pack', 'complete_pack']:
+                    try:
+                        table_recipe_content = """{
+    "format_version": "1.12",
+    "minecraft:recipe_shaped": {
+        "description": {
+            "identifier": "duplicatingtable:duplicating_table"
+        },
+        "tags": [
+            "crafting_table"
+        ],
+        "pattern": [
+            "iii",
+            "iCi",
+            "iii"
+        ],
+        "key": {
+            "i": {
+                "item": "minecraft:iron_ingot"
+            },
+            "C": {
+                "item": "minecraft:crafting_table"
+            }
+        },
+        "result": {
+            "item": "duplicatingtable:duplicating_table",
+            "count": 1
+        }
+    }
+}"""
+                        
+                        if format_type == 'behavior_pack':
+                            table_recipe_arcname = "Duplicating Table BP/recipes/duplicating_table.json"
+                        elif format_type == 'complete_pack':
+                            table_recipe_arcname = "Duplicating Table BP/recipes/duplicating_table.json"
+                        
+                        zipf.writestr(table_recipe_arcname, table_recipe_content)
+                        successful_recipes += 1
+                        logger.info("Added duplicating table crafting recipe to pack")
+                        
+                    except Exception as e:
+                        logger.error(f"Error adding table recipe to pack: {e}")
+                        failed_recipes += 1
                         
                 # Add metadata files based on format
                 try:
