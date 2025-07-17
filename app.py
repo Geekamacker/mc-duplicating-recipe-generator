@@ -250,62 +250,157 @@ def parse_text_catalog(content):
     return items
 
 def filter_stackable_items(items, show_stats=False):
-    """Filter out non-stackable items that cannot be duplicated"""
+    """Filter out non-stackable items (stack size = 1) that cannot be duplicated
+    Updated for Minecraft Bedrock 1.21.94 - using explicit list only"""
     if not items:
         return [], []
     
-    # Define non-stackable item patterns (tools, armor, vehicles, etc.)
-    non_stackable_patterns = [
-        # Tools and weapons
-        'sword', 'pickaxe', 'axe', 'shovel', 'hoe', 'shears', 'flint_and_steel',
-        'fishing_rod', 'bow', 'crossbow', 'trident', 'shield', 'elytra',
-        'spyglass', 'brush', 'mace', 'carrot_on_a_stick', 'warped_fungus_on_a_stick',
+    # Exact item names that don't stack (stack size = 1) - EXPLICIT LIST ONLY
+    non_stackable_exact = {
+        # === TOOLS ===
+        # Swords
+        'wooden_sword', 'stone_sword', 'iron_sword', 'golden_sword', 
+        'diamond_sword', 'netherite_sword',
         
-        # Armor and equipment (including wolf armor)
-        'helmet', 'chestplate', 'leggings', 'boots', 'horse_armor', 'harness', 'wolf_armor',
+        # Pickaxes
+        'wooden_pickaxe', 'stone_pickaxe', 'iron_pickaxe', 'golden_pickaxe',
+        'diamond_pickaxe', 'netherite_pickaxe',
         
-        # Vehicles/Transportation
-        'boat', 'raft', 'minecart', 'saddle',
+        # Axes
+        'wooden_axe', 'stone_axe', 'iron_axe', 'golden_axe',
+        'diamond_axe', 'netherite_axe',
         
-        # Music/Records/Instruments
-        'music_disc', 'record', 'goat_horn',
+        # Shovels
+        'wooden_shovel', 'stone_shovel', 'iron_shovel', 'golden_shovel',
+        'diamond_shovel', 'netherite_shovel',
         
-        # Potions and consumables with special properties
-        'potion', 'splash_potion', 'lingering_potion', 'tipped_arrow',
-        'medicine', 'suspicious_stew', 'mushroom_stew', 'rabbit_stew', 'beetroot_soup',
+        # Hoes
+        'wooden_hoe', 'stone_hoe', 'iron_hoe', 'golden_hoe',
+        'diamond_hoe', 'netherite_hoe',
         
-        # Books and written items
-        'enchanted_book', 'written_book', 'writable_book',
+        # Other tools/weapons
+        'bow', 'crossbow', 'shield', 'fishing_rod', 'shears',
+        'flint_and_steel', 'trident', 'mace',
+        'carrot_on_a_stick', 'warped_fungus_on_a_stick',
         
-        # Containers with NBT or special behavior
-        'bundle', 'shulker_box', 'portfolio',
+        # === ARMOR ===
+        # Helmets
+        'leather_helmet', 'chainmail_helmet', 'iron_helmet', 'golden_helmet',
+        'diamond_helmet', 'netherite_helmet', 'turtle_helmet',
         
-        # Special items and tools
-        'totem', 'compass', 'clock', 'map', 'filled_map',
-        'sparkler', 'glow_stick',
+        # Chestplates
+        'leather_chestplate', 'chainmail_chestplate', 'iron_chestplate', 
+        'golden_chestplate', 'diamond_chestplate', 'netherite_chestplate',
         
-        # Spawn eggs
-        'spawn_egg',
+        # Leggings
+        'leather_leggings', 'chainmail_leggings', 'iron_leggings',
+        'golden_leggings', 'diamond_leggings', 'netherite_leggings',
         
-        # Banners and decorative items with NBT
-        'banner'
-    ]
-    
-    # Additional specific non-stackable items
-    non_stackable_items = {
-        # Containers and liquids
-        'bucket', 'water_bucket', 'lava_bucket', 'milk_bucket', 'powder_snow_bucket',
-        'cod_bucket', 'salmon_bucket', 'pufferfish_bucket', 'tropical_fish_bucket',
+        # Boots
+        'leather_boots', 'chainmail_boots', 'iron_boots', 'golden_boots',
+        'diamond_boots', 'netherite_boots',
+        
+        # Horse armor
+        'leather_horse_armor', 'iron_horse_armor', 'golden_horse_armor',
+        'diamond_horse_armor',
+        
+        # Other armor
+        'elytra', 'wolf_armor',
+        
+        # === HARNESSES (Wolf Armor variants) ===
+        'black_harness', 'white_harness', 'orange_harness', 'magenta_harness',
+        'light_blue_harness', 'yellow_harness', 'lime_harness', 'pink_harness',
+        'gray_harness', 'light_gray_harness', 'cyan_harness', 'purple_harness',
+        'blue_harness', 'brown_harness', 'green_harness', 'red_harness',
+        
+        # === BUNDLES ===
+        'bundle',  # Base bundle
+        'black_bundle', 'white_bundle', 'orange_bundle', 'magenta_bundle',
+        'light_blue_bundle', 'yellow_bundle', 'lime_bundle', 'pink_bundle', 
+        'gray_bundle', 'light_gray_bundle', 'cyan_bundle', 'purple_bundle',
+        'blue_bundle', 'brown_bundle', 'green_bundle', 'red_bundle',
+        
+        # === BANNER PATTERNS ===
+        'flower_banner_pattern', 'creeper_banner_pattern', 'skull_banner_pattern',
+        'mojang_banner_pattern', 'globe_banner_pattern', 'piglin_banner_pattern',
+        'flow_banner_pattern', 'guster_banner_pattern', 'field_masoned_banner_pattern',
+        'bordure_indented_banner_pattern',
+        
+        # === BUCKETS ===
+        # NOTE: empty 'bucket' removed - it stacks to 16!
+        'water_bucket', 'lava_bucket', 'milk_bucket',
+        'powder_snow_bucket', 'cod_bucket', 'salmon_bucket',
+        'pufferfish_bucket', 'tropical_fish_bucket', 
         'axolotl_bucket', 'tadpole_bucket',
         
-        # Food with special stacking rules
-        'cake', 'pumpkin_pie',
+        # === STEWS/SOUPS ===
+        'mushroom_stew', 'rabbit_stew', 'beetroot_soup', 'suspicious_stew',
         
-        # Beds (have special placement rules)
-        'bed', 'white_bed', 'orange_bed', 'magenta_bed', 'light_blue_bed', 'yellow_bed',
-        'lime_bed', 'pink_bed', 'gray_bed', 'light_gray_bed', 'cyan_bed', 'purple_bed',
-        'blue_bed', 'brown_bed', 'green_bed', 'red_bed', 'black_bed'
+        # === POTIONS ===
+        'potion', 'splash_potion', 'lingering_potion',
+        # Note: Would need to add specific potion types if they have unique IDs
+        
+        # === MUSIC DISCS ===
+        'music_disc_13', 'music_disc_cat', 'music_disc_blocks', 'music_disc_chirp',
+        'music_disc_far', 'music_disc_mall', 'music_disc_mellohi', 'music_disc_stal',
+        'music_disc_strad', 'music_disc_ward', 'music_disc_11', 'music_disc_wait',
+        'music_disc_otherside', 'music_disc_5', 'music_disc_pigstep', 'music_disc_relic',
+        'music_disc_creator', 'music_disc_creator_music_box', 'music_disc_precipice',
+        'music_disc_tears', 'music_disc_lava_chicken',
+        
+        # === BOATS ===
+        'boat', 'oak_boat', 'spruce_boat', 'birch_boat', 'jungle_boat',
+        'acacia_boat', 'dark_oak_boat', 'mangrove_boat', 'cherry_boat',
+        'bamboo_raft', 'pale_oak_boat',
+        'chest_boat', 'oak_chest_boat', 'spruce_chest_boat', 'birch_chest_boat',
+        'jungle_chest_boat', 'acacia_chest_boat', 'dark_oak_chest_boat',
+        'mangrove_chest_boat', 'cherry_chest_boat', 'bamboo_chest_raft',
+        'pale_oak_chest_boat',
+        
+        # === MINECARTS ===
+        'minecart', 'chest_minecart', 'hopper_minecart', 'tnt_minecart',
+        'furnace_minecart', 'command_block_minecart',
+        
+        # === BEDS ===
+        'bed', 'white_bed', 'orange_bed', 'magenta_bed', 'light_blue_bed',
+        'yellow_bed', 'lime_bed', 'pink_bed', 'gray_bed', 'light_gray_bed',
+        'cyan_bed', 'purple_bed', 'blue_bed', 'brown_bed', 'green_bed',
+        'red_bed', 'black_bed',
+        
+        # === SHULKER BOXES ===
+        'shulker_box', 'undyed_shulker_box', 'white_shulker_box', 'orange_shulker_box', 
+        'magenta_shulker_box', 'light_blue_shulker_box', 'yellow_shulker_box', 
+        'lime_shulker_box', 'pink_shulker_box', 'gray_shulker_box', 
+        'light_gray_shulker_box', 'cyan_shulker_box', 'purple_shulker_box', 
+        'blue_shulker_box', 'brown_shulker_box', 'green_shulker_box', 
+        'red_shulker_box', 'black_shulker_box',
+        
+        # === BOOKS WITH NBT ===
+        'written_book', 'writable_book', 'book_and_quill', 'enchanted_book',
+        
+        # === SPECIAL ITEMS ===
+        'totem_of_undying', 'saddle', 'filled_map', 'cake',
+        'spyglass', 'brush', 'goat_horn',
+        
+        # === EDUCATION EDITION ===
+        'sparkler', 'glow_stick', 'medicine',
     }
+    
+    # Items often mistaken as non-stackable but actually DO stack:
+    # - spawn_egg variants (stack to 64)
+    # - armor_stand (stacks to 16)
+    # - compass (stacks to 64)
+    # - clock (stacks to 64)
+    # - map/empty_map (stacks to 64)
+    # - tipped_arrow (stacks to 64)
+    # - banner (stacks to 16)
+    # - sign (stacks to 16)
+    # - bowl (stacks to 64)
+    # - bottle (stacks to 64)
+    # - bucket (empty bucket stacks to 16)
+    # - pumpkin_pie (stacks to 64)
+    # - name_tag (stacks to 64)
+    # - lead (stacks to 64)
     
     stackable_items = []
     filtered_items = []
@@ -316,35 +411,15 @@ def filter_stackable_items(items, show_stats=False):
             
         item_lower = item.lower()
         
-        # Check if item matches any non-stackable patterns
-        is_stackable = True
-        
-        # Check patterns
-        for pattern in non_stackable_patterns:
-            if pattern in item_lower:
-                is_stackable = False
-                break
-        
-        # Check specific items
-        if item_lower in non_stackable_items:
-            is_stackable = False
-        
-        # Special rules for enchanted items (typically non-stackable)
-        if 'enchanted_' in item_lower and item_lower != 'enchanted_golden_apple':
-            is_stackable = False
-        
-        # Additional checks for items that commonly cause issues
-        if any(word in item_lower for word in ['_on_a_stick', '_chest_', 'chest_', '_armor', '_horn']):
-            is_stackable = False
-        
-        if is_stackable:
-            stackable_items.append(item)
-        else:
+        # Simple check - is it in our explicit list?
+        if item_lower in non_stackable_exact:
             filtered_items.append(item)
+        else:
+            stackable_items.append(item)
     
     if show_stats:
         logger.info(f"Filtered items: {len(stackable_items)} stackable, {len(filtered_items)} non-stackable")
-        if filtered_items and len(filtered_items) <= 20:  # Log first 20 filtered items for debugging
+        if filtered_items and len(filtered_items) <= 20:
             logger.info(f"Filtered out: {', '.join(filtered_items[:20])}")
     
     return stackable_items, filtered_items
