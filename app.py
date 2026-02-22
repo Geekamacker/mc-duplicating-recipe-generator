@@ -266,6 +266,15 @@ def filter_stackable_items(items, show_stats=False):
         'wooden_pickaxe', 'stone_pickaxe', 'iron_pickaxe', 'golden_pickaxe',
         'diamond_pickaxe', 'netherite_pickaxe',
         
+        # Copper tools (custom/modded tier)
+        'copper_sword', 'copper_pickaxe', 'copper_axe', 'copper_shovel', 'copper_hoe',
+
+        # Copper armor (custom/modded tier)
+        'copper_helmet', 'copper_chestplate', 'copper_leggings', 'copper_boots',
+        
+        # Copper horse armor (custom/modded tier)
+        'copper_horse_armor',
+
         # Axes
         'wooden_axe', 'stone_axe', 'iron_axe', 'golden_axe',
         'diamond_axe', 'netherite_axe',
@@ -379,7 +388,7 @@ def filter_stackable_items(items, show_stats=False):
         'written_book', 'writable_book', 'book_and_quill', 'enchanted_book',
         
         # === SPECIAL ITEMS ===
-        'totem_of_undying', 'saddle', 'filled_map', 'cake',
+        'totem_of_undying', 'saddle', 'filled_map',
         'spyglass', 'brush', 'goat_horn',
         
         # === EDUCATION EDITION ===
@@ -401,6 +410,7 @@ def filter_stackable_items(items, show_stats=False):
     # - pumpkin_pie (stacks to 64)
     # - name_tag (stacks to 64)
     # - lead (stacks to 64)
+    # - cake (stacks to 64)
     
     stackable_items = []
     filtered_items = []
