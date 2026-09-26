@@ -364,7 +364,7 @@ def filter_stackable_items(items, show_stats=False):
         'chest_boat', 'oak_chest_boat', 'spruce_chest_boat', 'birch_chest_boat',
         'jungle_chest_boat', 'acacia_chest_boat', 'dark_oak_chest_boat',
         'mangrove_chest_boat', 'cherry_chest_boat', 'bamboo_chest_raft',
-        'pale_oak_chest_boat',
+        'pale_oak_chest_boat', 'poplar_boat', 'poplar_chest_boat',
         
         # === MINECARTS ===
         'minecart', 'chest_minecart', 'hopper_minecart', 'tnt_minecart',
